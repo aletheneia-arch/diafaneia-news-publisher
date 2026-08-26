@@ -1,0 +1,36 @@
+name: Build Diafaneia News Publisher 1.2.0
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "windows-app/**"
+      - ".github/workflows/build-windows.yml"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Run acceptance tests
+        run: dotnet run --project windows-app/NewsPublisher.Windows.Acceptance/NewsPublisher.Windows.Acceptance.csproj -c Release
+      - name: Run connector and security checks
+        run: python acceptance-tests/static_checks.py
+      - name: Publish portable Windows application
+        run: dotnet publish windows-app/NewsPublisher.Windows/NewsPublisher.Windows.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o windows-publish
+      - name: Package WordPress connector
+        shell: pwsh
+        run: Compress-Archive -Path wordpress-plugin/karago-diafaneia-publisher-connector -DestinationPath KARAGO_DIAFANEIA_PUBLISHER_CONNECTOR_1.0.0.zip -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: News-Publisher-Diafaneia-Windows-1.2.0
+          path: windows-publish/**
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KARAGO-Diafaneia-Publisher-Connector-1.0.0
+          path: KARAGO_DIAFANEIA_PUBLISHER_CONNECTOR_1.0.0.zip
+          if-no-files-found: error
