@@ -45,8 +45,57 @@ public sealed record PublishResult(int PostId, string Status, string EditLink, s
 
 public sealed class ConnectorImage
 {
-    [JsonPropertyName("name")] public string Name { get; set; } = "";
-    [JsonPropertyName("mime_type")] public string MimeType { get; set; } = "";
-    [JsonPropertyName("data_base64")] public string DataBase64 { get; set; } = "";
+    private string name = "";
+    private string mimeType = "";
+    private string dataBase64 = "";
+
+    [JsonPropertyName("name")] public string Name { get => name; set => name = value ?? ""; }
+    [JsonPropertyName("mime_type")] public string MimeType { get => mimeType; set => mimeType = value ?? ""; }
+    [JsonPropertyName("data_base64")]
+    public string DataBase64
+    {
+        get => dataBase64;
+        set
+        {
+            var raw = value ?? "";
+            byte[] bytes;
+            try { bytes = Convert.FromBase64String(raw); }
+            catch (FormatException) { throw new InvalidOperationException("Η featured image είναι κατεστραμμένη."); }
+
+            var actualMime = DetectActualMime(bytes)
+                ?? throw new InvalidOperationException("Η featured image δεν είναι έγκυρο JPEG, PNG, WebP ή GIF.");
+
+            mimeType = actualMime;
+            name = NormalizeName(name, actualMime);
+            dataBase64 = raw;
+        }
+    }
     [JsonPropertyName("alt_text")] public string AltText { get; set; } = "";
+
+    internal static string? DetectActualMime(ReadOnlySpan<byte> data)
+    {
+        if (data.Length >= 3 && data[0] == 0xff && data[1] == 0xd8 && data[2] == 0xff) return "image/jpeg";
+        if (data.Length >= 8 && data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4e && data[3] == 0x47
+            && data[4] == 0x0d && data[5] == 0x0a && data[6] == 0x1a && data[7] == 0x0a) return "image/png";
+        if (data.Length >= 6 && data[0] == (byte)'G' && data[1] == (byte)'I' && data[2] == (byte)'F'
+            && data[3] == (byte)'8' && (data[4] == (byte)'7' || data[4] == (byte)'9') && data[5] == (byte)'a') return "image/gif";
+        if (data.Length >= 12 && data[0] == (byte)'R' && data[1] == (byte)'I' && data[2] == (byte)'F' && data[3] == (byte)'F'
+            && data[8] == (byte)'W' && data[9] == (byte)'E' && data[10] == (byte)'B' && data[11] == (byte)'P') return "image/webp";
+        return null;
+    }
+
+    internal static string NormalizeName(string? originalName, string mime)
+    {
+        var clean = string.IsNullOrWhiteSpace(originalName) ? "featured-image" : Path.GetFileName(originalName.Trim());
+        var baseName = Path.GetFileNameWithoutExtension(clean);
+        if (string.IsNullOrWhiteSpace(baseName)) baseName = "featured-image";
+        var extension = mime switch
+        {
+            "image/png" => ".png",
+            "image/webp" => ".webp",
+            "image/gif" => ".gif",
+            _ => ".jpg"
+        };
+        return baseName + extension;
+    }
 }

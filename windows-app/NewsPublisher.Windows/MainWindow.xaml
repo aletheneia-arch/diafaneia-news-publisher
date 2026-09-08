@@ -1,7 +1,7 @@
 <Window x:Class="KaragoPublisher.Windows.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="News Publisher 1.2.0 — Χιώτικη Διαφάνεια" Width="980" Height="900" MinWidth="760" MinHeight="650" WindowStartupLocation="CenterScreen">
+        Title="News Publisher 1.2.2 — Χιώτικη Διαφάνεια" Width="980" Height="900" MinWidth="760" MinHeight="650" WindowStartupLocation="CenterScreen">
   <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="18" MaxWidth="1150">
-    <TextBlock Text="News Publisher 1.2.0" FontSize="27" FontWeight="Bold"/>
+    <TextBlock Text="News Publisher 1.2.2" FontSize="27" FontWeight="Bold"/>
     <TextBlock Text="Χιώτικη Διαφάνεια — Επικόλληση μία φορά → Προσχέδιο ή Δημοσίευση" Foreground="#555" Margin="0,2,0,12"/>
     <WrapPanel>
       <Button Content="📋 Επικόλληση" Click="Paste_Click"/>
