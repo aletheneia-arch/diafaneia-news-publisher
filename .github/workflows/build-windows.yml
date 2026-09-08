@@ -19,24 +19,10 @@ jobs:
         run: dotnet run --project windows-app/NewsPublisher.Windows.Acceptance/NewsPublisher.Windows.Acceptance.csproj -c Release
       - name: Run featured-image hardening acceptance tests
         run: dotnet run --project windows-app/NewsPublisher.Windows.ImageAcceptance/NewsPublisher.Windows.ImageAcceptance.csproj -c Release
-      - name: Verify Connector remains unchanged
-        shell: pwsh
-        run: |
-          $expected = "FA8FD8E28DA3BB8960B89315533F3CC4994B97DA3F1CFB2528F05C9BF7CC6E22"
-          $actual = (Get-FileHash "wordpress-plugin/karago-diafaneia-publisher-connector/karago-diafaneia-publisher-connector.php" -Algorithm SHA256).Hash
-          if ($actual -ne $expected) { throw "Connector 1.0.0 changed unexpectedly: $actual" }
       - name: Publish portable Windows application
         run: dotnet publish windows-app/NewsPublisher.Windows/NewsPublisher.Windows.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -o windows-publish
-      - name: Package WordPress connector
-        shell: pwsh
-        run: Compress-Archive -Path wordpress-plugin/karago-diafaneia-publisher-connector -DestinationPath KARAGO_DIAFANEIA_PUBLISHER_CONNECTOR_1.0.0.zip -Force
       - uses: actions/upload-artifact@v4
         with:
           name: News-Publisher-Diafaneia-Windows-1.2.2
           path: windows-publish/**
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v4
-        with:
-          name: KARAGO-Diafaneia-Publisher-Connector-1.0.0
-          path: KARAGO_DIAFANEIA_PUBLISHER_CONNECTOR_1.0.0.zip
           if-no-files-found: error
