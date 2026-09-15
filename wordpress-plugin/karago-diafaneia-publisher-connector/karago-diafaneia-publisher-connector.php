@@ -2,7 +2,7 @@
 /**
  * Plugin Name: KARAGO Diafaneia Publisher Connector
  * Description: Ιδιωτική, ασφαλής σύνδεση των εφαρμογών KARAGO με το diafaneia.eu, με ξεχωριστό κλειδί ανά συσκευή.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Author: KARAGO
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 
 final class KARAGO_Diafaneia_Publisher_Connector
 {
-    const VERSION = '1.0.0';
+    const VERSION = '1.0.1';
     const SCHEMA_VERSION = '1.0.0';
     const REST_NAMESPACE = 'karago-diafaneia/v1';
     const SITE_KEY = 'diafaneia';
@@ -519,7 +519,8 @@ final class KARAGO_Diafaneia_Publisher_Connector
 
             $post_data = array(
                 'post_type' => 'post',
-                'post_status' => $normalized['status'],
+                // Create as draft first when final status is publish, so featured image is attached before publish/Yoast hooks run.
+                'post_status' => $normalized['status'] === 'publish' ? 'draft' : $normalized['status'],
                 'post_title' => $normalized['title'],
                 'post_content' => $content,
                 'post_excerpt' => $normalized['excerpt'],
@@ -556,6 +557,21 @@ final class KARAGO_Diafaneia_Publisher_Connector
                 self::delete_attachments($attachment_ids);
                 self::mark_request_failed($normalized['request_id'], 'karago_featured_image_failed');
                 return self::error('karago_featured_image_failed', 'Δεν ήταν δυνατός ο ορισμός της featured image.', 500);
+            }
+
+            // Publish only after taxonomy + featured image are in place.
+            // This prevents Yoast/Open Graph from indexing the first inline/ad image as og:image.
+            if ($normalized['status'] === 'publish') {
+                $publish_result = wp_update_post(array(
+                    'ID' => $post_id,
+                    'post_status' => 'publish',
+                ), true);
+                if (is_wp_error($publish_result)) {
+                    wp_delete_post($post_id, true);
+                    self::delete_attachments($attachment_ids);
+                    self::mark_request_failed($normalized['request_id'], $publish_result->get_error_code());
+                    return $publish_result;
+                }
             }
 
             clean_post_cache($post_id);
