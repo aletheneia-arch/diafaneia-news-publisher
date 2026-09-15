@@ -20,12 +20,19 @@ jobs:
       - name: PHP syntax check
         run: php -l wordpress-plugin/karago-diafaneia-publisher-connector/karago-diafaneia-publisher-connector.php
       - name: Verify version and OG ordering fix
-        shell: bash
         run: |
-          grep -q "Version: 1.0.1" wordpress-plugin/karago-diafaneia-publisher-connector/karago-diafaneia-publisher-connector.php
-          grep -q "const VERSION = '1.0.1';" wordpress-plugin/karago-diafaneia-publisher-connector/karago-diafaneia-publisher-connector.php
-          grep -q "post_status' => \\$normalized\['status'\] === 'publish' ? 'draft'" wordpress-plugin/karago-diafaneia-publisher-connector/karago-diafaneia-publisher-connector.php
-          grep -q "wp_update_post" wordpress-plugin/karago-diafaneia-publisher-connector/karago-diafaneia-publisher-connector.php
+          python - <<'PY'
+          from pathlib import Path
+          p = Path("wordpress-plugin/karago-diafaneia-publisher-connector/karago-diafaneia-publisher-connector.php")
+          s = p.read_text(encoding="utf-8")
+          assert "Version: 1.0.1" in s
+          assert "const VERSION = '1.0.1';" in s
+          assert "'post_status' => $normalized['status'] === 'publish' ? 'draft' : $normalized['status']," in s
+          a = s.index("set_post_thumbnail")
+          b = s.index("wp_update_post", a)
+          assert a < b
+          print("Connector 1.0.1 OG ordering checks PASS")
+          PY
       - name: Package plugin
         run: |
           cd wordpress-plugin
