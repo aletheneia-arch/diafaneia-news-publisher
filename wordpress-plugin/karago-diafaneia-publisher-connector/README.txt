@@ -53,6 +53,7 @@ POST /wp-json/karago-diafaneia/v1/publish
 
 = 1.0.1 =
 * Διορθώνει το Open Graph image σε άμεση δημοσίευση: η featured image ορίζεται πριν από το publish transition ώστε Yoast/Facebook να μην επιλέγουν inline ή διαφημιστική εικόνα.
+* Δεν αλλάζει REST endpoints, API keys ή ρυθμίσεις σύνδεσης.
 
 = 1.0.0 =
 * Πρώτη ανεξάρτητη έκδοση για τη Διαφάνεια.
