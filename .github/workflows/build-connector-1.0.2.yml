@@ -1,0 +1,48 @@
+name: Build Diafaneia Connector 1.0.2
+
+on:
+  push:
+    branches:
+      - "fix/diafaneia-connector-safe-filenames-1.0.2"
+    paths:
+      - "wordpress-plugin/karago-diafaneia-publisher-connector/**"
+      - ".github/workflows/build-connector-1.0.2.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+      - name: PHP syntax check
+        run: php -l wordpress-plugin/karago-diafaneia-publisher-connector/karago-diafaneia-publisher-connector.php
+      - name: Verify version and image filename hardening
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path("wordpress-plugin/karago-diafaneia-publisher-connector/karago-diafaneia-publisher-connector.php")
+          s = p.read_text(encoding="utf-8")
+          assert "Version: 1.0.2" in s
+          assert "const VERSION = '1.0.2';" in s
+          assert "'post_status' => $normalized['status'] === 'publish' ? 'draft' : $normalized['status']," in s
+          assert "diafaneia-image-" in s
+          assert "hash_file('sha256', $temporary)" in s
+          a = s.index("set_post_thumbnail")
+          b = s.index("wp_update_post", a)
+          assert a < b
+          print("Connector 1.0.2 checks PASS")
+          PY
+      - name: Package plugin
+        run: |
+          cd wordpress-plugin
+          zip -qr ../KARAGO_DIAFANEIA_PUBLISHER_CONNECTOR_1.0.2.zip karago-diafaneia-publisher-connector
+      - name: SHA256
+        run: sha256sum KARAGO_DIAFANEIA_PUBLISHER_CONNECTOR_1.0.2.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KARAGO_DIAFANEIA_PUBLISHER_CONNECTOR_1.0.2
+          path: KARAGO_DIAFANEIA_PUBLISHER_CONNECTOR_1.0.2.zip
+          if-no-files-found: error
