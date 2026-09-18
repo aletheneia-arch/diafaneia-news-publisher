@@ -3,7 +3,7 @@ Contributors: karago
 Tags: editorial, rest-api, publishing, diafaneia
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: Proprietary
 
 Ιδιωτικός Connector αποκλειστικά για το https://diafaneia.eu.
@@ -50,6 +50,11 @@ POST /wp-json/karago-diafaneia/v1/publish
 Η δημοσίευση είναι κλειδωμένη στο diafaneia.eu, το API λειτουργεί μόνο με HTTPS ρύθμιση, η ανακατεύθυνση δεν απαιτείται, και κάθε REQUEST_ID δεσμεύεται ατομικά στη βάση πριν από οποιαδήποτε δημιουργία άρθρου.
 
 == Changelog ==
+
+= 1.0.2 =
+* Όλες οι εικόνες που ανεβάζει ο Publisher αποθηκεύονται με ασφαλές ASCII-only filename τύπου diafaneia-image-<hash>.ext.
+* Διατηρεί τη διόρθωση 1.0.1 ώστε η featured image να ορίζεται πριν από το publish transition.
+* Δεν αλλάζει REST endpoints, API keys ή ρυθμίσεις σύνδεσης.
 
 = 1.0.1 =
 * Διορθώνει το Open Graph image σε άμεση δημοσίευση: η featured image ορίζεται πριν από το publish transition ώστε Yoast/Facebook να μην επιλέγουν inline ή διαφημιστική εικόνα.
