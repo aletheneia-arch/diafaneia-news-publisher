@@ -2,7 +2,7 @@
 /**
  * Plugin Name: KARAGO Diafaneia Publisher Connector
  * Description: Ιδιωτική, ασφαλής σύνδεση των εφαρμογών KARAGO με το diafaneia.eu, με ξεχωριστό κλειδί ανά συσκευή.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: KARAGO
  * Requires at least: 6.0
  * Requires PHP: 7.4
@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 
 final class KARAGO_Diafaneia_Publisher_Connector
 {
-    const VERSION = '1.0.1';
+    const VERSION = '1.0.2';
     const SCHEMA_VERSION = '1.0.0';
     const REST_NAMESPACE = 'karago-diafaneia/v1';
     const SITE_KEY = 'diafaneia';
@@ -1005,7 +1005,10 @@ final class KARAGO_Diafaneia_Publisher_Connector
             return self::error('karago_bad_image_type', 'Το πραγματικό αρχείο εικόνας δεν συμφωνεί με τον δηλωμένο τύπο.', 400);
         }
 
-        $safe_filename = sanitize_file_name(pathinfo($filename, PATHINFO_FILENAME) . '.' . $checked['ext']);
+        // Always use an ASCII-only deterministic filename for Publisher uploads.
+        // This avoids Greek letters, spaces and other URL-sensitive characters in social/Open Graph image URLs.
+        $hash = substr(hash_file('sha256', $temporary), 0, 12);
+        $safe_filename = 'diafaneia-image-' . $hash . '.' . $checked['ext'];
         $file_array = array('name' => $safe_filename, 'tmp_name' => $temporary);
         $attachment_id = media_handle_sideload($file_array, 0, sanitize_text_field($title));
         if (is_wp_error($attachment_id)) {
